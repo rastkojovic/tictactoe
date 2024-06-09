@@ -126,6 +126,9 @@
       // X: score[0]  O: score[1]
       let score = [0, 0];
 
+      // Refresh the page if window is resized [fix for coordinate issue]
+      window.onresize = function(){ location.reload(); };
+
       function splitXAndOMoves() {
         // Clear xMoves and oMoves and then repopulate with updated data
         xMoves.length = 0;
