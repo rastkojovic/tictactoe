@@ -234,6 +234,13 @@
             filledSquares.push([coordX, coordY, "X"]);
             firstPlayed = true;
           }
+
+          // Remove placed item from movesLeft array
+          console.log("Moves left: " + movesLeft);
+          let index = movesLeft.indexOf([coordX, coordY]);
+          movesLeft.splice(index, 1);
+          console.log("Moves left backup: " + movesLeftBackup);
+
           playSoundEffect();
         }
 
@@ -246,6 +253,7 @@
         console.log("oMoves: " + oMoves);
 
         checkVictory();
+        checkDraw();
       }
 
       function drawGrid() {
@@ -274,6 +282,7 @@
         );
       }
 
+      // --> Replace this with a custom function that animates drawing
       function drawCircle(coordX, coordY) {
         pen.beginPath();
         pen.arc(coordX, coordY, 35, 0, 2 * Math.PI);
@@ -452,6 +461,58 @@
         return null;
       }
 
+      // Every time a move is played remove appropriate element from this list
+      let movesLeft = [
+        [50, 50],
+        [150, 50],
+        [250, 50],
+        [50, 150],
+        [150, 150],
+        [250, 150],
+        [50, 250],
+        [150, 250],
+        [250, 250],
+      ];
+      // Restore movesLeft array for new game
+      /* We use JSON to first convert to string and then
+      create a new array object from the string (deep copy) */
+      let movesLeftString = JSON.stringify(movesLeft);
+      let movesLeftBackup = JSON.parse(movesLeftString);
+
+      // Check if last move can lead to victory
+      function checkDraw() {
+        if (movesLeft.length > 1) {
+          return false;
+        }
+
+        let lastMove = movesLeft[0];
+        if (firstPlayed) {
+          lastMove.push("O");
+          console.log("CheckDraw 'O' triggered!");
+        } else {
+          lastMove.push("X");
+          console.log("CheckDraw 'X' triggered!");
+        }
+
+        // Place next symbol
+        filledSquares.push(lastMove);
+        if (!checkVictory(1)) {
+          console.log("Its a DRAW!");
+          drawMechanic();
+          return true;
+        } else {
+          filledSquares.pop();
+        }
+
+        return false;
+      }
+
+      async function drawMechanic() {
+        document.getElementById("score").innerHTML = "DRAW!";
+        await sleep(3000);
+        newGame();
+      }
+
       /* >>Main check function<< */
       function checkVictory() {
         let tempSymbol;
@@ -468,8 +529,16 @@
         console.log("checkColumnsResult:  " + checkColumnsResult);
 
         if (checkColumnsResult != null) {
-          victoryMechanic(checkColumnsResult);
-          return;
+          /* 
+          If we didn't pass an argument treat it as 
+          victory, if we did, skip victoryMechanic and treat
+          it as a draw
+          */
+          if (arguments.length == 0) {
+            victoryMechanic(checkColumnsResult);
+          }
+
+          return true;
         }
 
         // If row victory is not null victoryMechanic(checkRows(tempSymbol))
@@ -478,8 +547,11 @@
         console.log("checkRowsResult:  " + checkRowsResult);
 
         if (checkRowsResult != null) {
-          victoryMechanic(checkRowsResult);
-          return;
+          if (arguments.length == 0) {
+            victoryMechanic(checkRowsResult);
+          }
+
+          return true;
         }
 
         // if diagonal victory is not null victoryMechanic(checkDiagonals(tempSymbol))
@@ -487,11 +559,14 @@
         let checkDiagonalsResult = checkDiagonals(tempSymbol);
 
         if (checkDiagonalsResult != null) {
-          victoryMechanic(checkDiagonalsResult);
-          return;
+          if (arguments.length == 0) {
+            victoryMechanic(checkDiagonalsResult);
+          }
+          return true;
         }
 
-        console.log(tempSymbol);
+        // If not victory, return false
+        return false;
       }
 
       // End game / Victory mechanic
@@ -554,6 +629,10 @@
         pen.clearRect(0, 0, canvasWidth, canvasHeight);
         // Weird way to clear array
         filledSquares.length = 0;
+        /* Doing movesLeft = movesLeftBackup would cancel out
+        the deep copy and both would point to the same palce in 
+        memory */
+        movesLeft = JSON.parse(JSON.stringify(movesLeftBackup));
         firstPlayed = false;
         updateScore();
         drawGrid();
