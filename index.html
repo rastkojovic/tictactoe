@@ -57,6 +57,11 @@
         border-radius: 10px;
         background-color: #3572ef;
       }
+
+      canvas.disabled {
+        pointer-events: none;
+      }
+
       .center {
         margin: 0 auto;
         margin-top: 80px;
@@ -508,6 +513,7 @@
       }
 
       async function drawMechanic() {
+        disableCanvas();
         document.getElementById("score").innerHTML = "DRAW!";
         await sleep(3000);
         newGame();
@@ -571,6 +577,8 @@
 
       // End game / Victory mechanic
       async function victoryMechanic(winnerArray) {
+        disableCanvas();
+
         //winnerArray example [[50, 50, "X"], [150, 150, "X"], [250, 250, "X"]]
         let winnerStartCoords = winnerArray[0].slice(0, 2);
         let winnerEndCoords = winnerArray[2].slice(0, 2);
@@ -589,6 +597,9 @@
         );
         // Extract symbol from winner arary and increase score appropriately
         increaseScore(winnerArray[0][2]);
+
+        await sleep(3000);
+        newGame();
       }
 
       function countItems(myArray, item) {
@@ -625,6 +636,14 @@
         updateScore();
       }
 
+      function disableCanvas() {
+        document.getElementsByTagName("canvas")[0].classList.add("disabled");
+      }
+
+      function enableCanvas() {
+        document.getElementsByTagName("canvas")[0].classList.remove("disabled");
+      }
+
       function newGame() {
         pen.clearRect(0, 0, canvasWidth, canvasHeight);
         // Weird way to clear array
@@ -636,6 +655,7 @@
         firstPlayed = false;
         updateScore();
         drawGrid();
+        enableCanvas();
       }
 
       newGame();
